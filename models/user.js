@@ -5,18 +5,21 @@ const ObjectId = Schema.ObjectId;
 
 const userSchema = new Schema({
     user_id: ObjectId,
-    user_name: {
+    userName: {
         type: String     
     },
     password: {
         type: String     
     },
-    email_id: {
+    emailId: {
         type: String     
     },
-    phone_number: {
+    phoneNumber: {
         type: String     
-    }
+    },
+    createDateTime : {
+        type: String     
+    },
 })
 
 module.exports.User = mongoose.model('User', userSchema);

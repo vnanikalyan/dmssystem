@@ -4,7 +4,7 @@ const Folder = require('./folder');
 const User = require('./user');
 
 module.exports = {
-    file: File,
-    folder: Folder,
-    user: User
+    File: File,
+    Folder: Folder,
+    User: User
 };

@@ -1,115 +1,237 @@
-const {File, Folder, User} = require('../models');
+//const {File, Folder, User} = require('../models');
 
-//const { File } = require('../models/file');
-//const { Folder } = require('../models/folder');
-//const { User } = require('../models/user');
+const { File } = require('../models/file');
+const { Folder } = require('../models/folder');
+const { User } = require('../models/user');
+
 const moment = require('moment');
+const fs = require('fs');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const FileType = require('file-type');
+
 
 function Service(objectCollection) {
     const db = objectCollection.db;
+    const privateKey = objectCollection.privateKey;
 
-    this.getAllFilesAndFoldersOfAUser = async () => {
+    this.getAllFilesAndFoldersOfAUser = async (request) => {
         let responseData = [],
-        error = true;
+            error = true;
 
-        //model.Folder
-        const folders = await Folder.find();
-        console.log(folders);
+        console.log('USER ID - ', request.user_id);
+        
+        //Get all the Folders
+        const foldersData = await db.collection('folders').find().toArray();    
+        console.log('foldersData - ', foldersData);
+        for(const i of foldersData) {
+            if(i.creator === request.user_id) {
+                responseData.push(i);
+            }
+        }
 
-        const files = await File.find();
-        console.log(files);
-
+        //Get all the Files
+        const filesData = await db.collection('files').find().toArray();    
+        console.log('DATA - ', filesData);
+        for(const i of filesData) {
+            if(i.creator === request.user_id) {
+                responseData.push(i);
+            }
+        }
+    
         return [error, responseData];
     }
 
     //To get the specific files of a Folder
-    this.getFilesOfGivenFolder = async() => {}
+    this.getFilesOfGivenFolder = async(request) => {
+        let responseData = [],
+            error = true;
+
+        console.log('FOLDER ID - ', request.folder_id);
+
+        //Get all the Files
+        const filesData = await db.collection('files').find().toArray();
+        //console.log('DATA - ', filesData);
+        for(const i of filesData) {
+            if(i.folder_id === request.folder_id) {
+                responseData.push(i);
+            }
+        }
+    
+        return [error, responseData];
+    }
 
     //Creates a New Folder
-    this.createNewFolder = async() => {
+    this.createNewFolder = async(request) => {
         let error = true,
             responseData = [];
 
         const folder = new Folder();
         folder.folder_name = request.folder_name;
-        folder.file_created_by = request.user_id;
-        folder.file_created_datetime= moment().utc().format("YYYY-MM-DD HH:mm:ss");
+        folder.creator = request.user_id;
+        folder.folder_created_datetime= moment().utc().format("YYYY-MM-DD HH:mm:ss");
 
-        //console.log(folder);
+        console.log(folder);
 
         await new Promise((resolve , reject)=>{
             folder.save((err, doc) => {
                 if (!err) {
                     error = false;
                     console.log('DOC - ', doc);
-                    responseData = doc;
+                    //responseData = doc;
+
+                    responseData.push({
+                        'message': 'Folder Saved Successfully!'
+                    })
                 } else {
                     console.log('Error in saving Folder : ', err);
+                    responseData.push({
+                        'error': err
+                    })
                 }   
 
                 resolve();
             });
-        })        
-
+        })
+        
         return [false, responseData];
     }
 
     //Creates a New File
     this.createNewFile = async(request) => {
         let error = true,
-            responseData = [];
+            responseData = [];        
 
         const file = new File();
         file.file_name = request.file_name;
-        file.content = 'This is file content!',
+        file.content = request.file_content;
+        //file.content = 'This is file content!',
+        //file.content = fs.readFileSync(`uploads/${request.file.originalname}`);
+        //file.content = binary(request.files.uploadedFile.data);
         file.folder_id =  request.folder_id || 0;
-        file.file_created_by = request.user_id;
+        file.creator = request.user_id;
         file.file_created_datetime= moment().utc().format("YYYY-MM-DD HH:mm:ss");
 
         //console.log(file);
+        let fileContent = file.content;
+        console.log(fileContent.toString());
 
         await new Promise((resolve , reject)=>{
             file.save((err, doc) => {
                 if (!err) {
                     error = false;
                     console.log('DOC - ', doc);
-                    responseData = doc;
+                    //responseData = doc;
+
+                    responseData.push({
+                        'message': 'File Successfully Created!'
+                    })
                 } else {
                     console.log('Error in  saving File : ', err);
-                }   
+                    responseData.push({
+                        'message': err
+                    })
+                }
 
                 resolve();
             });
-        })        
+        })
 
         return [false, responseData];
     }
 
     //Moves file from one folder to Another Folder
     this.moveFile = async(request) => {
-        from_folder = request.from_folder;
-        to_folder = request.to_folder;
-        file_id = request.file_id;
+        let error = true,
+            responseData = [];
 
-        /*await new Promise((resolve , reject)=>{
-            file.update((err, doc) => {
+        const fromFolderID = request.from_folder_id;
+        const toFolderID = request.to_folder_id;
+        const fileID = request.file_id;
+
+        console.log('Moving File ID - ', request.file_id);
+
+        const filter = {"_id": fileID};
+        const update = {"folder_id": toFolderID};
+        const fileData = await db.collection('files').findOneAndUpdate(filter, update);
+
+        return [error, responseData];
+    }
+
+    //Authenticates User
+    //Returns a JWT token
+    this.loginUser = async(request) =>{
+        let error = true,
+            responseData = [];
+
+        //Get the password hash from DB        
+        const data = await db.collection('users').find().toArray();
+        //console.log('DATA - ', data);
+
+        let hash;
+        let userID;
+        for(const i of data){
+            if(i.userName === request.user_name) {
+                hash = i.password;
+                userID = i._id;
+            }
+        }
+
+        //console.log('HASH - ', hash);
+        const result = await bcrypt.compare(request.password, hash);
+        console.log('Result - ', result);
+
+        if(result) {
+            error = false;
+
+            //JWT            
+            const token = jwt.sign(
+                { 
+                    user_id: userID
+                }, privateKey, { expiresIn: '1h' }, { algorithm: 'RS256'});
+
+            
+            responseData.push({
+                user_id: userID,
+                access_token: token
+            });
+        }
+
+        return [error, responseData];
+    }
+
+    this.addUser = async (request) => {        
+        let error = true,
+            responseData = [];
+
+        const saltRounds = 10
+        const hash = await bcrypt.hash(request.password, saltRounds);
+
+        //Store hash - new password in the DB
+        const user = new User();
+        user.userName = request.user_name;
+        user.password = hash;
+        user.emailId = request.email_id;
+        user.phoneNumber = request.phone_number;
+        user.createDateTime = moment().utc().format("YYYY-MM-DD HH:mm:ss");;
+
+        console.log('User - ', user);
+
+        await new Promise((resolve , reject)=>{
+            user.save((err, doc) => {
                 if (!err) {
                     error = false;
                     console.log('DOC - ', doc);
                     responseData = doc;
                 } else {
                     console.log('Error in  saving File : ', err);
-                }   
+                }
 
                 resolve();
             });
-        })*/      
+        })
 
-    }
-
-    //Authenticates User
-    //Returns a JWT token
-    this.loginUser = async() =>{
+        return [error, responseData];
     }
 
 

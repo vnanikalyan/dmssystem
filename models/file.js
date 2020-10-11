@@ -6,9 +6,13 @@ const ObjectId = Schema.ObjectId;
 const fileSchema = new Schema({
     file_id: ObjectId,
     file_name: String,
-    content: String,
+    content: {
+        //data: Buffer,
+        type: Buffer,
+        contentType: String
+    },
     folder_id: String,
-    file_created_by: String,
+    creator: String,
     file_created_datetime: String
 })
 
