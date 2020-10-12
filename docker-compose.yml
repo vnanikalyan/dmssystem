@@ -1,23 +1,20 @@
 version: "3.8"
 
 services:
-	dms:
-		image: dms
-		build: .
-		environment:
-			NODE_ENV: production
-		ports
-			- 3000:3000
-		volumes:
-			- .:/usr/src/app
-		links:
-			- mongodb
-	mongodb:
-		image: mongo
-		ports:
-			- 27017:27017
-		volumes:
-			- mongodata:/data/db
-
-volumes:
-	data:
+  dms:
+    image: dms
+	build: .
+	environment:
+	  NODE_ENV: production
+	  ports:
+	   - 3000:3000
+	  volumes:
+	   - .:/usr/src/app
+	  links:
+	   - mongodb
+  mongodb:
+	image: mongo
+  	ports:
+	  - 27017:27017
+	volumes:
+	 - mongodata:/data/db

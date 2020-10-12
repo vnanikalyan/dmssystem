@@ -4,7 +4,7 @@ const ObjectId = Schema.ObjectId;
 
 
 const userSchema = new Schema({
-    user_id: ObjectId,
+    userId: ObjectId,
     userName: {
         type: String     
     },
@@ -17,7 +17,7 @@ const userSchema = new Schema({
     phoneNumber: {
         type: String     
     },
-    createDateTime : {
+    createDatetime : {
         type: String     
     },
 })

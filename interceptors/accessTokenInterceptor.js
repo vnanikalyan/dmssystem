@@ -18,7 +18,7 @@ function AccessTokenInterceptor(objCollection) {
             }        
             
             //decoded = jwt.decode(token, {complete: true});               
-            console.log('objCollection.privateKey - ', (objCollection.privateKey).toString());
+            //console.log('objCollection.privateKey - ', (objCollection.privateKey).toString());
             const decoded = jwt.verify(token, (objCollection.privateKey).toString());
             console.log('decoded : ', decoded);
 
@@ -26,11 +26,16 @@ function AccessTokenInterceptor(objCollection) {
                 res.status(400).send({'message': 'Invalid Access Token'});
                 return;
             }
-            
-            const userIDFromRequest = req.body.user_id || req.query.user_id;
+
+            const userIDFromRequest = req.body.user_id;
             console.log('userIDFromRequest - ', userIDFromRequest);
+
             if(decoded.user_id === userIDFromRequest) {
                 //Upon succcessful verification of the Token
+                next();
+            } else if(userIDFromRequest === undefined) {
+                console.log('decoded.user_id - ', decoded.user_id);
+                req.decoded_user_id = decoded.user_id;                
                 next();
             } else {
                 res.status(400).send({'message': 'Invalid Access Token'});

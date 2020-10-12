@@ -13,17 +13,25 @@ const FileType = require('file-type');
 
 function Service(objectCollection) {
     const db = objectCollection.db;
-    const privateKey = objectCollection.privateKey;
+    const privateKey = (objectCollection.privateKey).toString();
 
     this.getAllFilesAndFoldersOfAUser = async (request) => {
         let responseData = [],
-            error = true;
+            error = true;        
 
+        console.log('Decoded User Id - ', request.decoded_user_id);
         console.log('USER ID - ', request.user_id);
         
+        if(request.decoded_user_id !== request.user_id) {
+            responseData.push({
+                'message': 'Invalid Access Token!'
+            })
+            return [error, responseData];
+        }
+
         //Get all the Folders
-        const foldersData = await db.collection('folders').find().toArray();    
-        console.log('foldersData - ', foldersData);
+        const foldersData = await db.collection('folders').find().toArray(); 
+        //console.log('foldersData - ', foldersData);
         for(const i of foldersData) {
             if(i.creator === request.user_id) {
                 responseData.push(i);
@@ -32,13 +40,19 @@ function Service(objectCollection) {
 
         //Get all the Files
         const filesData = await db.collection('files').find().toArray();    
-        console.log('DATA - ', filesData);
+        //console.log('DATA - ', filesData);
         for(const i of filesData) {
             if(i.creator === request.user_id) {
                 responseData.push(i);
             }
         }
     
+        if(responseData.length === 0) {
+            responseData.push({
+                'message': 'No Data!'
+            })
+        }
+
         return [error, responseData];
     }
 
@@ -47,15 +61,27 @@ function Service(objectCollection) {
         let responseData = [],
             error = true;
 
-        console.log('FOLDER ID - ', request.folder_id);
+        console.log('Decoded User Id - ', request.decoded_user_id);
+        console.log('USER ID - ', request.user_id);
+            
+        if(request.decoded_user_id !== request.user_id) {
+            responseData.push({
+                'message': 'Invalid Access Token!'
+            })
+            return [error, responseData];
+        }
+
+        console.log('FOLDER ID - ', request.folder_id);        
 
         //Get all the Files
-        const filesData = await db.collection('files').find().toArray();
-        //console.log('DATA - ', filesData);
-        for(const i of filesData) {
-            if(i.folder_id === request.folder_id) {
-                responseData.push(i);
-            }
+        const filesData = await db.collection('files').find({"folderId": request.folder_id}).toArray();
+        console.log(filesData);
+        responseData = filesData;
+        
+        if(responseData.length === 0) {
+            responseData.push({
+                'message': 'No Data!'
+            })
         }
     
         return [error, responseData];
@@ -67,33 +93,43 @@ function Service(objectCollection) {
             responseData = [];
 
         const folder = new Folder();
-        folder.folder_name = request.folder_name;
+        folder.folderName = request.folder_name;
         folder.creator = request.user_id;
-        folder.folder_created_datetime= moment().utc().format("YYYY-MM-DD HH:mm:ss");
+        folder.createdDatetime= moment().utc().format("YYYY-MM-DD HH:mm:ss");
 
-        console.log(folder);
+        //console.log(folder);
 
-        await new Promise((resolve , reject)=>{
-            folder.save((err, doc) => {
-                if (!err) {
-                    error = false;
-                    console.log('DOC - ', doc);
-                    //responseData = doc;
+        const folderData = await 
+            db.collection('folders')
+            .find({$and:[{"folderName": request.folder_name}, {"creator": request.user_id}]})
+            .toArray();
 
-                    responseData.push({
-                        'message': 'Folder Saved Successfully!'
-                    })
-                } else {
-                    console.log('Error in saving Folder : ', err);
-                    responseData.push({
-                        'error': err
-                    })
-                }   
+        console.log('folderData - ', folderData);
+        if(folderData.length > 0) {
+            responseData.push({'message': 'A folder with the same name exists already!'});            
+        } else {
+            await new Promise((resolve , reject)=>{
+                folder.save((err, doc) => {
+                    if (!err) {
+                        error = false;
+                        console.log('DOC - ', doc);
+                        //responseData = doc;
+    
+                        responseData.push({
+                            'message': 'Folder Saved Successfully!'
+                        })
+                    } else {
+                        console.log('Error in saving Folder : ', err);
+                        responseData.push({
+                            'error': err
+                        })
+                    }   
+    
+                    resolve();
+                });
+            })
+        }
 
-                resolve();
-            });
-        })
-        
         return [false, responseData];
     }
 
@@ -103,40 +139,47 @@ function Service(objectCollection) {
             responseData = [];        
 
         const file = new File();
-        file.file_name = request.file_name;
+        file.fileName = request.file_name;
         file.content = request.file_content;
         //file.content = 'This is file content!',
         //file.content = fs.readFileSync(`uploads/${request.file.originalname}`);
         //file.content = binary(request.files.uploadedFile.data);
-        file.folder_id =  request.folder_id || 0;
+        file.folderId =  request.folder_id || 0;
         file.creator = request.user_id;
-        file.file_created_datetime= moment().utc().format("YYYY-MM-DD HH:mm:ss");
+        file.createdDatetime= moment().utc().format("YYYY-MM-DD HH:mm:ss");
 
-        //console.log(file);
-        let fileContent = file.content;
-        console.log(fileContent.toString());
+        //check whether this file_name is already existing for that  User
+        const fileData = await 
+            db.collection('files')
+            .find({$and: [{"fileName": request.file_name}, {creator: request.user_id}]})
+            .toArray();
 
-        await new Promise((resolve , reject)=>{
-            file.save((err, doc) => {
-                if (!err) {
-                    error = false;
-                    console.log('DOC - ', doc);
-                    //responseData = doc;
-
-                    responseData.push({
-                        'message': 'File Successfully Created!'
-                    })
-                } else {
-                    console.log('Error in  saving File : ', err);
-                    responseData.push({
-                        'message': err
-                    })
-                }
-
-                resolve();
-            });
-        })
-
+        console.log('fileData - ', fileData);
+        if(fileData.length > 0) {
+            responseData.push({'message': 'A file with the same name exists already!'});            
+        } else { 
+            await new Promise((resolve , reject)=>{
+                file.save((err, doc) => {
+                    if (!err) {
+                        error = false;
+                        console.log('DOC - ', doc);
+                        //responseData = doc;
+    
+                        responseData.push({
+                            'message': 'File Successfully Created!'
+                        })
+                    } else {
+                        console.log('Error in  saving File : ', err);
+                        responseData.push({
+                            'message': err
+                        })
+                    }
+    
+                    resolve();
+                });
+            })
+        }     
+            
         return [false, responseData];
     }
 
@@ -149,11 +192,20 @@ function Service(objectCollection) {
         const toFolderID = request.to_folder_id;
         const fileID = request.file_id;
 
-        console.log('Moving File ID - ', request.file_id);
+        console.log('Moving The File ID - ', request.file_id);
+        console.log('Moving To Folder ID - ', request.to_folder_id);
 
-        const filter = {"_id": fileID};
-        const update = {"folder_id": toFolderID};
-        const fileData = await db.collection('files').findOneAndUpdate(filter, update);
+        //Check if the folderId exists
+        const toFolderData = await db.collection('folders').find({"folderId": request.to_folder_id}).toArray();
+        if(toFolderData.length > 0) {
+            const filter = {"_id": fileID};
+            const update = {"folder_id": toFolderID};
+            const fileData = await db.collection('files').findOneAndUpdate(filter, update);
+        } else {
+            responseData.push({
+                'message': 'To Folder does not exist!'
+            })
+        }
 
         return [error, responseData];
     }
@@ -164,9 +216,11 @@ function Service(objectCollection) {
         let error = true,
             responseData = [];
 
+        console.log(request);
+
         //Get the password hash from DB        
         const data = await db.collection('users').find().toArray();
-        //console.log('DATA - ', data);
+        console.log('DATA - ', data);
 
         let hash;
         let userID;
@@ -213,28 +267,67 @@ function Service(objectCollection) {
         user.password = hash;
         user.emailId = request.email_id;
         user.phoneNumber = request.phone_number;
-        user.createDateTime = moment().utc().format("YYYY-MM-DD HH:mm:ss");;
+        user.createDatetime = moment().utc().format("YYYY-MM-DD HH:mm:ss");;        
 
-        console.log('User - ', user);
+        //check whether the username is already taken
+        const userData = await db.collection('users').find({"userName": request.user_name}).toArray();
+        console.log(userData);
+        if(userData.length > 0) {
+            responseData.push({'message': `The userName ${request.user_name} is already taken!`});
+        } else {
+            await new Promise((resolve , reject)=>{
+                user.save(async (err, doc) => {
+                    if (!err) {
+                        error = false;
+                        console.log('DOC - ', doc);
+                        responseData = doc;
 
-        await new Promise((resolve , reject)=>{
-            user.save((err, doc) => {
-                if (!err) {
-                    error = false;
-                    console.log('DOC - ', doc);
-                    responseData = doc;
-                } else {
-                    console.log('Error in  saving File : ', err);
-                }
-
-                resolve();
-            });
-        })
-
+                        //await createDefaultFolderZero(doc);
+                    } else {
+                        console.log('Error in  saving File : ', err);
+                    }
+    
+                    resolve();
+                });
+            })
+        }
         return [error, responseData];
     }
 
+    async function createDefaultFolderZero(doc) {
+        let error = true,
+            responseData = [];
 
+        const folder = new Folder();
+        folder._id = '0_'+ doc._id;
+        folder.folderName = null;
+        folder.creator = doc._id;
+        folder.createdDatetime= moment().utc().format("YYYY-MM-DD HH:mm:ss");
+        
+        await new Promise((resolve , reject)=>{
+            folder.save((err, doc) => {
+                if (!err) {
+                    error = false;
+                    console.log('DOC - ', doc);            
+
+                    //responseData.push({
+                    //    'message': 'Folder Saved Successfully!'
+                    //})
+                } else {
+                    console.log('Error in saving Folder : ', err);
+                    //responseData.push({
+                    //    'error': err
+                    //})
+                }   
+
+                resolve();
+            });
+            })
+        
+        return [false, responseData];
+    }
+
+        
 }
 
 module.exports = Service;

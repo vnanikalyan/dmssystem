@@ -21,14 +21,22 @@ function Controller(objCollection) {
     
     /** 
      * @swagger
-     * /dms/folders-files/list/:user_id:
-     *  get:
-     *      description: To list all the files & folders of a specific User
+     * paths:
+     *    /dms/folders-files/list/{user_id}:
+     *      get:
+     *          summary: To list all the files & folders of a specific User
+     *      parameters:
+     *          -in: path
+     *          name: user_id
+     *          type: string
+     *          required: true
+     *          description: User ID
      *      responses:
      *          '200':
      *              description: A Successful Response
     */
-    app.get('/dms/folders-files/list/:user_id', async (req, res) => {
+    app.get('/dms/folders-files/list/:user_id', async (req, res) => {        
+        req.params.decoded_user_id = req.decoded_user_id;
         const [err, data] = await service.getAllFilesAndFoldersOfAUser(req.params);
         (!err)?
             res.status(200).send(data):        
@@ -39,14 +47,21 @@ function Controller(objCollection) {
 
     /** 
      * @swagger
-     * /dms/:folder_id/files/list:
+     * /dms/{user_id}/files/list/{folder_id}:
      *  get:
      *      description: To list all the files in a specific Folder
+     *      parameters:          
+     *          name: folder_id
+     *          schema:
+     *              type: integer
+     *          required: true
+     *          description: Numeric ID of the user to get
      *      responses:
      *          '200':
      *              description: A Successful Response
     */
-    app.get('/dms/:folder_id/files/list', async (req, res) => {
+    app.get('/dms/:user_id/files/list/:folder_id', async (req, res) => {
+        req.params.decoded_user_id = req.decoded_user_id;
         const [err, data] = await service.getFilesOfGivenFolder(req.params);
         (!err)?
             res.status(200).send(data):
@@ -60,6 +75,22 @@ function Controller(objCollection) {
      * /dms/folder/add:
      *  post:
      *      description: Create a New Folder
+     *      requestBody:
+     *          description: Optional description in *Markdown*
+     *          required: true
+     *          content:
+     *          application/json:
+     *              schema:
+     *              $ref: '#/components/schemas/Pet'
+     *          application/xml:
+     *              schema:
+     *              $ref: '#/components/schemas/Pet'
+     *          application/x-www-form-urlencoded:
+     *              schema:
+     *              $ref: '#/components/schemas/PetForm'
+     *          text/plain:
+     *              schema:
+     *              type: string
      *      responses:
      *          '200':
      *              description: A Successful Response, returns folder ID
