@@ -5,6 +5,7 @@ function AccessTokenInterceptor(objCollection) {
 
         console.log(req.url);        
         if(req.url === '/dms/user/login' || req.url === '/dms/user/add') {
+            console.log('Skipping Authentication!');
             next();
         } else {
             try {

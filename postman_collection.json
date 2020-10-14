@@ -1,0 +1,269 @@
+{
+	"info": {
+		"_postman_id": "2238df65-7e54-468e-805c-00aebece6263",
+		"name": "automate.io",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "/dms/user/add",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "user_name",
+							"value": "varasala",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "varasala",
+							"type": "text"
+						},
+						{
+							"key": "email_id",
+							"value": "varasala@email.com",
+							"type": "text"
+						},
+						{
+							"key": "phone_number",
+							"value": "987654321",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/dms/user/add",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"dms",
+						"user",
+						"add"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/dms/user/login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "user_name",
+							"value": "nani",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "nani",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/dms/user/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"dms",
+						"user",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/dms/file/add",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNWY4NDlmNzI2ZGRiNDMyMGJiMDJkOWVmIiwiaWF0IjoxNjAyNTI3NzY3LCJleHAiOjE2MDI1MzEzNjd9.hhvMiV9x8AaadSRNRh9ezIg8EclbpflMkSUMbjyuzaY",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "folder_id",
+							"value": "1",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "user_id",
+							"value": "5f849f726ddb4320bb02d9ef",
+							"type": "text"
+						},
+						{
+							"key": "file_name",
+							"value": "fileOne",
+							"type": "text"
+						},
+						{
+							"key": "file_content",
+							"value": "this is file content One",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/dms/file/add",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"dms",
+						"file",
+						"add"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/dms/folder/add",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNWY4NDlmNzI2ZGRiNDMyMGJiMDJkOWVmIiwiaWF0IjoxNjAyNTI3NzY3LCJleHAiOjE2MDI1MzEzNjd9.hhvMiV9x8AaadSRNRh9ezIg8EclbpflMkSUMbjyuzaY",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "folder_name",
+							"value": "folderFive",
+							"type": "text"
+						},
+						{
+							"key": "user_id",
+							"value": "5f849f726ddb4320bb02d9ef",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3000/dms/folder/add",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"dms",
+						"folder",
+						"add"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/dms/folders-files/list/:user_id",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNWY4MzM5ZWI5OGQ1YmUyYTNmOWVkN2I0IiwiaWF0IjoxNjAyNDM5Mjk4LCJleHAiOjE2MDI0NDI4OTh9.up6COj-Mrwr-yftjtvUTJmaZCTfL9TGrvNiLhxdQXDs",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://localhost:3000/dms/folders-files/list/5f8339eb98d5be2a3f9ed7b4",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"dms",
+						"folders-files",
+						"list",
+						"5f8339eb98d5be2a3f9ed7b4"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/:folder_id/files/list",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://localhost:3000/5f83520a4fd21543c4bb3faf/files/list",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"5f83520a4fd21543c4bb3faf",
+						"files",
+						"list"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

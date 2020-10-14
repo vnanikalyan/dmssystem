@@ -30,22 +30,18 @@ function Service(objectCollection) {
         }
 
         //Get all the Folders
-        const foldersData = await db.collection('folders').find().toArray(); 
-        //console.log('foldersData - ', foldersData);
-        for(const i of foldersData) {
-            if(i.creator === request.user_id) {
-                responseData.push(i);
-            }
-        }
+        const foldersData = await db.collection('folders').find(
+            {"creator": request.user_id}
+        ).toArray(); 
+        console.log('foldersData - ', foldersData);        
 
         //Get all the Files
-        const filesData = await db.collection('files').find().toArray();    
-        //console.log('DATA - ', filesData);
-        for(const i of filesData) {
-            if(i.creator === request.user_id) {
-                responseData.push(i);
-            }
-        }
+        const filesData = await db.collection('files').find(
+            {"creator": request.user_id}
+        ).toArray();    
+        console.log('filesData - ', filesData);     
+        
+        responseData = [...foldersData, ...filesData];
     
         if(responseData.length === 0) {
             responseData.push({
@@ -106,7 +102,7 @@ function Service(objectCollection) {
 
         console.log('folderData - ', folderData);
         if(folderData.length > 0) {
-            responseData.push({'message': 'A folder with the same name exists already!'});            
+            responseData.push({'message': 'A folder with the same name with the user exists already!'});
         } else {
             await new Promise((resolve , reject)=>{
                 folder.save((err, doc) => {
@@ -144,7 +140,7 @@ function Service(objectCollection) {
         //file.content = 'This is file content!',
         //file.content = fs.readFileSync(`uploads/${request.file.originalname}`);
         //file.content = binary(request.files.uploadedFile.data);
-        file.folderId =  request.folder_id || 0;
+        file.folderId =  request.folder_id || null;
         file.creator = request.user_id;
         file.createdDatetime= moment().utc().format("YYYY-MM-DD HH:mm:ss");
 
@@ -156,7 +152,7 @@ function Service(objectCollection) {
 
         console.log('fileData - ', fileData);
         if(fileData.length > 0) {
-            responseData.push({'message': 'A file with the same name exists already!'});            
+            responseData.push({'message': 'A file with the same name exists already for this user!'});            
         } else { 
             await new Promise((resolve , reject)=>{
                 file.save((err, doc) => {
@@ -222,6 +218,12 @@ function Service(objectCollection) {
         const data = await db.collection('users').find().toArray();
         console.log('DATA - ', data);
 
+        if(data.length === 0) {
+            responseData.push({
+                'message': 'User does not exist. Please create a user first.'
+            });
+            return [error, responseData];
+        }
         let hash;
         let userID;
         for(const i of data){
@@ -280,9 +282,7 @@ function Service(objectCollection) {
                     if (!err) {
                         error = false;
                         console.log('DOC - ', doc);
-                        responseData = doc;
-
-                        //await createDefaultFolderZero(doc);
+                        responseData = doc;                        
                     } else {
                         console.log('Error in  saving File : ', err);
                     }
@@ -293,40 +293,6 @@ function Service(objectCollection) {
         }
         return [error, responseData];
     }
-
-    async function createDefaultFolderZero(doc) {
-        let error = true,
-            responseData = [];
-
-        const folder = new Folder();
-        folder._id = '0_'+ doc._id;
-        folder.folderName = null;
-        folder.creator = doc._id;
-        folder.createdDatetime= moment().utc().format("YYYY-MM-DD HH:mm:ss");
-        
-        await new Promise((resolve , reject)=>{
-            folder.save((err, doc) => {
-                if (!err) {
-                    error = false;
-                    console.log('DOC - ', doc);            
-
-                    //responseData.push({
-                    //    'message': 'Folder Saved Successfully!'
-                    //})
-                } else {
-                    console.log('Error in saving Folder : ', err);
-                    //responseData.push({
-                    //    'error': err
-                    //})
-                }   
-
-                resolve();
-            });
-            })
-        
-        return [false, responseData];
-    }
-
         
 }
 

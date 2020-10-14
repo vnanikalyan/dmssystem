@@ -2,30 +2,18 @@ const Service = require('../services/service');
 
 function Controller(objCollection) {
     const app = objCollection.app;
-    const service = new Service(objCollection);        
-    
-    /** 
-     * @swagger
-     * /dms/simple:
-     *  get:
-     *      description: To Check
-     *      responses:
-     *          '200':
-     *              description: A Successful Response
-    */
-    app.get('dms/simple', (req, res)=>{
-        res.send({'message': 'Hello World!'});
-    });
+    const service = new Service(objCollection);
 
-
-    
     /** 
      * @swagger
      * paths:
      *    /dms/folders-files/list/{user_id}:
      *      get:
      *          summary: To list all the files & folders of a specific User
-     *      parameters:
+     *          produces:
+     *          - "application/xml"
+     *          - "application/json"
+     *          parameters:
      *          -in: path
      *          name: user_id
      *          type: string
@@ -72,28 +60,26 @@ function Controller(objCollection) {
 
     /** 
      * @swagger
+     * 
      * /dms/folder/add:
      *  post:
-     *      description: Create a New Folder
-     *      requestBody:
-     *          description: Optional description in *Markdown*
-     *          required: true
-     *          content:
-     *          application/json:
-     *              schema:
-     *              $ref: '#/components/schemas/Pet'
-     *          application/xml:
-     *              schema:
-     *              $ref: '#/components/schemas/Pet'
-     *          application/x-www-form-urlencoded:
-     *              schema:
-     *              $ref: '#/components/schemas/PetForm'
-     *          text/plain:
-     *              schema:
-     *              type: string
-     *      responses:
-     *          '200':
-     *              description: A Successful Response, returns folder ID
+     *    summary: Create a New Folder
+     *    description: Create a New Folder
+     * 
+     *    requestBody:     
+     *      content:
+     *        application/x-www-form-urlencoded:
+     *          schema:
+     *            properties:
+     *              user_id:
+     *                type: String
+     *                description: Give the User Id
+     *              folder_name:
+     *                type: String
+     *                description: Give the Folder Name  
+     *    responses:
+     *      '200':
+     *        description: A Successful Response
     */    
     app.post('/dms/folder/add', async (req, res) => {
         const [err, data] = await service.createNewFolder(req.body);
@@ -106,8 +92,10 @@ function Controller(objCollection) {
 
     /** 
      * @swagger
+     * 
      * /dms/file/add:
      *  post:
+     *      summary: Create a New File
      *      description: Create a New File
      *      responses:
      *          '200':
